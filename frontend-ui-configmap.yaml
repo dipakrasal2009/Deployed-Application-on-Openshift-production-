@@ -1,0 +1,569 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-ui-html
+  namespace: frontend
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>DevOps Health Check</title>
+      <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet" />
+      <style>
+        :root {
+          --bg: #0a0e14;
+          --surface: #111820;
+          --surface2: #161e28;
+          --border: #1e2d3d;
+          --accent: #00d9ff;
+          --accent2: #00ff9d;
+          --danger: #ff4757;
+          --warning: #ffa502;
+          --text: #cdd9e5;
+          --text-dim: #546e7a;
+          --text-bright: #e8f4fd;
+          --glow: 0 0 20px rgba(0,217,255,0.15);
+          --glow-green: 0 0 20px rgba(0,255,157,0.15);
+          --glow-red: 0 0 20px rgba(255,71,87,0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+          background: var(--bg);
+          color: var(--text);
+          font-family: 'JetBrains Mono', monospace;
+          min-height: 100vh;
+        }
+
+        body::before {
+          content: '';
+          position: fixed; inset: 0;
+          background-image:
+            linear-gradient(rgba(0,217,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,217,255,0.03) 1px, transparent 1px);
+          background-size: 40px 40px;
+          pointer-events: none; z-index: 0;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+        /* ── Header ── */
+        header { padding: 28px 0 20px; border-bottom: 1px solid var(--border); margin-bottom: 32px; }
+        .header-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+        .logo { display: flex; align-items: center; gap: 14px; }
+        .logo-icon {
+          width: 42px; height: 42px; border: 2px solid var(--accent); border-radius: 10px;
+          display: flex; align-items: center; justify-content: center; font-size: 20px;
+          box-shadow: var(--glow); animation: pulse-border 3s ease-in-out infinite;
+        }
+        @keyframes pulse-border {
+          0%,100% { box-shadow: var(--glow); }
+          50% { box-shadow: 0 0 30px rgba(0,217,255,0.35); }
+        }
+        .logo-text { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: var(--text-bright); }
+        .logo-text span { color: var(--accent); }
+        .header-meta { font-size: 11px; color: var(--text-dim); text-align: right; }
+        .status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); margin-right: 6px; animation: blink 2s ease-in-out infinite; }
+        @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+        /* ── Stats ── */
+        .stats-bar { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 16px; margin-bottom: 32px; animation: fadeUp .4s ease both; }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; position: relative; overflow: hidden; }
+        .stat-card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; }
+        .stat-card.total::before { background: var(--accent); }
+        .stat-card.healthy::before { background: var(--accent2); }
+        .stat-card.unhealthy::before { background: var(--danger); }
+        .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 8px; }
+        .stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--text-bright); }
+        .stat-card.healthy .stat-value { color: var(--accent2); }
+        .stat-card.unhealthy .stat-value { color: var(--danger); }
+
+        /* ── Main grid ── */
+        .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; animation: fadeUp .4s ease .1s both; }
+        @media(max-width:700px){ .main-grid{grid-template-columns:1fr} }
+
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .panel-header { padding: 16px 22px; border-bottom: 1px solid var(--border); background: var(--surface2); display: flex; align-items: center; justify-content: space-between; }
+        .panel-title { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-bright); }
+        .panel-body { padding: 22px; }
+
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: var(--text-dim); margin-bottom: 7px; }
+        input {
+          width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+          padding: 11px 13px; color: var(--text-bright); font-family: 'JetBrains Mono', monospace;
+          font-size: 13px; outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(0,217,255,.08); }
+        input::placeholder { color: var(--text-dim); }
+
+        /* ── Buttons ── */
+        .btn {
+          width: 100%; padding: 12px; border: none; border-radius: 8px;
+          font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 600;
+          text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: all .2s;
+        }
+        .btn-primary { background: var(--accent); color: #0a0e14; }
+        .btn-primary:hover { background: #00eeff; box-shadow: 0 0 20px rgba(0,217,255,.3); transform: translateY(-1px); }
+        .btn-secondary { background: transparent; color: var(--accent2); border: 1px solid var(--accent2); margin-top: 10px; }
+        .btn-secondary:hover { background: rgba(0,255,157,.08); box-shadow: var(--glow-green); transform: translateY(-1px); }
+        .btn-warning { background: transparent; color: var(--warning); border: 1px solid var(--warning); margin-top: 10px; }
+        .btn-warning:hover { background: rgba(255,165,2,.08); transform: translateY(-1px); }
+        .btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+        .btn-icon {
+          background: transparent; border: 1px solid var(--border); border-radius: 7px;
+          padding: 7px 12px; font-size: 12px; cursor: pointer; transition: all .2s;
+          font-family: 'JetBrains Mono', monospace; color: var(--text-dim);
+        }
+        .btn-icon.edit:hover { border-color: var(--warning); color: var(--warning); background: rgba(255,165,2,.08); }
+        .btn-icon.delete:hover { border-color: var(--danger); color: var(--danger); background: rgba(255,71,87,.08); }
+        .btn-icon.recheck:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,217,255,.08); }
+
+        .spinner { display: inline-block; width: 11px; height: 11px; border: 2px solid transparent; border-top-color: currentColor; border-radius: 50%; animation: spin .6s linear infinite; margin-right: 7px; vertical-align: middle; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+
+        /* ── Modal ── */
+        .modal-overlay {
+          position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100;
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+        .modal {
+          background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+          padding: 28px; width: 100%; max-width: 440px; transform: scale(.96); transition: transform .2s;
+        }
+        .modal-overlay.open .modal { transform: scale(1); }
+        .modal-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text-bright); margin-bottom: 20px; }
+        .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+        .modal-actions .btn { width: auto; flex: 1; }
+        .btn-cancel { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+        .btn-cancel:hover { border-color: var(--text-dim); color: var(--text-bright); }
+        .btn-confirm-delete { background: var(--danger); color: white; }
+        .btn-confirm-delete:hover { background: #ff6b7a; box-shadow: var(--glow-red); transform: translateY(-1px); }
+
+        /* ── Toast ── */
+        .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; flex-direction: column; gap: 10px; }
+        .toast {
+          background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+          padding: 13px 17px; font-size: 12px; min-width: 250px;
+          animation: slideIn .3s ease; display: flex; align-items: center; gap: 10px;
+        }
+        .toast.success { border-left: 3px solid var(--accent2); }
+        .toast.error   { border-left: 3px solid var(--danger); }
+        .toast.info    { border-left: 3px solid var(--accent); }
+        @keyframes slideIn { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+
+        /* ── Services section ── */
+        .services-section { animation: fadeUp .4s ease .2s both; margin-bottom: 60px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 12px; }
+        .section-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text-bright); }
+
+        .btn-runall {
+          background: transparent; border: 1px solid var(--accent); color: var(--accent);
+          padding: 9px 18px; border-radius: 8px; font-family: 'JetBrains Mono', monospace;
+          font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 2px;
+          cursor: pointer; transition: all .2s;
+        }
+        .btn-runall:hover { background: rgba(0,217,255,.08); box-shadow: var(--glow); transform: translateY(-1px); }
+        .btn-runall:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+        .empty-state {
+          text-align: center; padding: 60px 20px; color: var(--text-dim);
+          background: var(--surface); border: 1px dashed var(--border); border-radius: 16px;
+        }
+        .empty-state .icon { font-size: 38px; margin-bottom: 14px; opacity: .4; }
+        .empty-state p { font-size: 13px; }
+
+        /* ── Service cards ── */
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px,1fr)); gap: 16px; }
+        .service-card {
+          background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+          padding: 18px; position: relative; overflow: hidden;
+          transition: border-color .2s, transform .2s; animation: cardIn .3s ease both;
+        }
+        @keyframes cardIn { from{opacity:0;transform:scale(.97)} to{opacity:1;transform:scale(1)} }
+        .service-card:hover { border-color: rgba(0,217,255,.25); transform: translateY(-2px); }
+        .service-card::before { content:''; position:absolute; top:0;left:0; width:3px; height:100%; border-radius:14px 0 0 14px; }
+        .service-card.healthy-card::before { background: var(--accent2); }
+        .service-card.unhealthy-card::before { background: var(--danger); }
+
+        .card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+        .service-name { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-bright); }
+        .health-badge { font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; padding: 3px 9px; border-radius: 20px; font-weight: 600; }
+        .health-badge.healthy { background: rgba(0,255,157,.1); color: var(--accent2); border: 1px solid rgba(0,255,157,.2); }
+        .health-badge.unhealthy { background: rgba(255,71,87,.1); color: var(--danger); border: 1px solid rgba(255,71,87,.2); }
+
+        .service-url { font-size: 11px; color: var(--text-dim); margin-bottom: 12px; word-break: break-all; }
+        .service-url a { color: var(--accent); text-decoration: none; }
+        .service-url a:hover { text-decoration: underline; }
+
+        .card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border); }
+        .card-meta { font-size: 10px; color: var(--text-dim); }
+        .card-actions { display: flex; gap: 6px; }
+
+        .response-box {
+          background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+          padding: 12px; font-size: 11px; color: var(--accent2);
+          white-space: pre-wrap; word-break: break-all; margin-top: 14px; display: none;
+        }
+        .response-box.visible { display: block; }
+      </style>
+    </head>
+    <body>
+
+    <div class="container">
+
+      <!-- Header -->
+      <header>
+        <div class="header-inner">
+          <div class="logo">
+            <div class="logo-icon">🛰️</div>
+            <div>
+              <div class="logo-text">DevOps <span>HealthCheck</span></div>
+              <div style="font-size:10px;color:var(--text-dim);margin-top:2px;">Service Monitor v2.0 — CRUD</div>
+            </div>
+          </div>
+          <div class="header-meta">
+            <div><span class="status-dot"></span>API: <span id="api-url-display"></span></div>
+            <div style="margin-top:4px;" id="last-refresh">Last refresh: —</div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Stats -->
+      <div class="stats-bar">
+        <div class="stat-card total"><div class="stat-label">Total Services</div><div class="stat-value" id="stat-total">0</div></div>
+        <div class="stat-card healthy"><div class="stat-label">Healthy</div><div class="stat-value" id="stat-healthy">0</div></div>
+        <div class="stat-card unhealthy"><div class="stat-label">Unhealthy</div><div class="stat-value" id="stat-unhealthy">0</div></div>
+      </div>
+
+      <!-- Main grid -->
+      <div class="main-grid">
+
+        <!-- Add / Edit Service -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title" id="form-title">+ Register Service</span>
+            <button id="btn-cancel-edit" onclick="cancelEdit()" style="display:none;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:6px;font-size:10px;cursor:pointer;font-family:inherit;">✕ Cancel</button>
+          </div>
+          <div class="panel-body">
+            <input type="hidden" id="edit-original-name" />
+            <div class="form-group">
+              <label>Service Name</label>
+              <input type="text" id="svc-name" placeholder="e.g. gateway" />
+            </div>
+            <div class="form-group">
+              <label>Service URL</label>
+              <input type="text" id="svc-url" placeholder="e.g. https://google.com" />
+            </div>
+            <button class="btn btn-primary" id="btn-submit" onclick="submitForm()">
+              Check &amp; Register
+            </button>
+            <div class="response-box" id="form-response"></div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="panel">
+          <div class="panel-header"><span class="panel-title">⚡ Quick Actions</span></div>
+          <div class="panel-body">
+            <p style="font-size:12px;color:var(--text-dim);margin-bottom:18px;line-height:1.7;">Manage all registered services at once.</p>
+            <button class="btn btn-primary" id="btn-fetch" onclick="fetchServices()">🔄 &nbsp;Refresh All Services</button>
+            <button class="btn btn-secondary" id="btn-runall" onclick="runAll()">▶ &nbsp;Re-run All Health Checks</button>
+            <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+              <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;">API Routes (CRUD)</div>
+              <div style="font-size:11px;line-height:2.1;color:var(--text-dim);">
+                <span style="color:var(--accent2)">GET</span> &nbsp;&nbsp;&nbsp;/services<br/>
+                <span style="color:var(--accent2)">GET</span> &nbsp;&nbsp;&nbsp;/services/{name}<br/>
+                <span style="color:var(--accent)">POST</span> &nbsp;/healthcheck<br/>
+                <span style="color:var(--warning)">PUT</span> &nbsp;&nbsp;/services/{name}<br/>
+                <span style="color:var(--danger)">DELETE</span> /services/{name}<br/>
+                <span style="color:var(--accent)">POST</span> &nbsp;/runall
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Services List -->
+      <div class="services-section">
+        <div class="section-header">
+          <div class="section-title">Registered Services</div>
+          <button class="btn-runall" id="btn-runall2" onclick="runAll()">▶ Run All Checks</button>
+        </div>
+        <div id="services-container">
+          <div class="empty-state">
+            <div class="icon">📡</div>
+            <p>No services registered yet.<br/>Add a service above to get started.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Edit confirm modal (reused for delete confirm too) -->
+    <div class="modal-overlay" id="delete-modal">
+      <div class="modal">
+        <div class="modal-title">🗑️ Delete Service</div>
+        <p style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+          Are you sure you want to delete <strong id="delete-modal-name" style="color:var(--text-bright)"></strong>?<br/>
+          This action cannot be undone.
+        </p>
+        <div class="modal-actions">
+          <button class="btn btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+          <button class="btn btn-confirm-delete" id="btn-confirm-delete" onclick="confirmDelete()">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+      const API = '/api';
+      document.getElementById('api-url-display').textContent = API;
+
+      let deleteTarget = null;
+      let editMode = false;
+
+      // ── Toast ──────────────────────────────────────────────────────────────────
+      function toast(msg, type = 'info') {
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+        el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+        document.getElementById('toast-container').appendChild(el);
+        setTimeout(() => el.remove(), 3500);
+      }
+
+      function setLoading(id, loading, label) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = loading;
+        btn.innerHTML = loading ? `<span class="spinner"></span>Loading...` : label;
+      }
+
+      function escHtml(str) {
+        return String(str ?? '').replace(/[&<>"']/g, c =>
+          ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      }
+
+      // ── Stats ──────────────────────────────────────────────────────────────────
+      function updateStats(arr) {
+        const healthy = arr.filter(s => s.Healthy).length;
+        document.getElementById('stat-total').textContent     = arr.length;
+        document.getElementById('stat-healthy').textContent   = healthy;
+        document.getElementById('stat-unhealthy').textContent = arr.length - healthy;
+        document.getElementById('last-refresh').textContent   = 'Last refresh: ' + new Date().toLocaleTimeString();
+      }
+
+      // ── Render cards ───────────────────────────────────────────────────────────
+      function renderServices(services) {
+        const arr = Array.isArray(services) ? services : Object.values(services);
+        const container = document.getElementById('services-container');
+        updateStats(arr || []);
+
+        if (!arr || arr.length === 0) {
+          container.innerHTML = `<div class="empty-state"><div class="icon">📡</div><p>No services registered yet.<br/>Add a service above to get started.</p></div>`;
+          return;
+        }
+
+        container.innerHTML = `<div class="services-grid">${arr.map((s, i) => `
+          <div class="service-card ${s.Healthy ? 'healthy-card' : 'unhealthy-card'}" style="animation-delay:${i*0.05}s">
+            <div class="card-top">
+              <div class="service-name">${escHtml(s.Name)}</div>
+              <div class="health-badge ${s.Healthy ? 'healthy' : 'unhealthy'}">${s.Healthy ? '● Healthy' : '● Unhealthy'}</div>
+            </div>
+            <div class="service-url"><a href="${escHtml(s.URL)}" target="_blank" rel="noopener">${escHtml(s.URL)}</a></div>
+            <div class="card-footer">
+              <div class="card-meta">ID: ${s.ID ?? '—'} &nbsp;·&nbsp; ${s.Timestamp ?? '—'}</div>
+              <div class="card-actions">
+                <button class="btn-icon recheck" title="Re-check" onclick="recheckOne('${escHtml(s.Name)}','${escHtml(s.URL)}')">↻</button>
+                <button class="btn-icon edit"    title="Edit"     onclick="openEdit('${escHtml(s.Name)}','${escHtml(s.URL)}')">✎</button>
+                <button class="btn-icon delete"  title="Delete"   onclick="openDeleteModal('${escHtml(s.Name)}')">✕</button>
+              </div>
+            </div>
+          </div>`).join('')}
+        </div>`;
+      }
+
+      // ── Fetch all ──────────────────────────────────────────────────────────────
+      async function fetchServices() {
+        setLoading('btn-fetch', true, '🔄 &nbsp;Refresh All Services');
+        try {
+          const res = await fetch(`${API}/services`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          renderServices(data);
+          toast('Services refreshed', 'success');
+        } catch (e) {
+          toast('Failed to fetch: ' + e.message, 'error');
+        } finally {
+          setLoading('btn-fetch', false, '🔄 &nbsp;Refresh All Services');
+        }
+      }
+
+      // ── Create / Update (form submit) ──────────────────────────────────────────
+      async function submitForm() {
+        const name    = document.getElementById('svc-name').value.trim();
+        const url     = document.getElementById('svc-url').value.trim();
+        const origName= document.getElementById('edit-original-name').value;
+
+        if (!name || !url) { toast('Please fill in Name and URL', 'error'); return; }
+
+        const respBox = document.getElementById('form-response');
+        setLoading('btn-submit', true, editMode ? 'Updating...' : 'Check &amp; Register');
+        respBox.classList.remove('visible');
+
+        try {
+          let res, endpoint, method;
+
+          if (editMode) {
+            // UPDATE — PUT /services/{originalName}
+            endpoint = `${API}/services/${encodeURIComponent(origName)}`;
+            method   = 'PUT';
+          } else {
+            // CREATE — POST /healthcheck
+            endpoint = `${API}/healthcheck`;
+            method   = 'POST';
+          }
+
+          res = await fetch(endpoint, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Name: name, URL: url })
+          });
+
+          const text = await res.text();
+          if (!res.ok) throw new Error(text);
+          const data = JSON.parse(text);
+
+          respBox.textContent = JSON.stringify(data, null, 2);
+          respBox.classList.add('visible');
+
+          toast(
+            `${name} ${editMode ? 'updated' : 'registered'} — ${data.Healthy ? 'Healthy ✅' : 'Unhealthy ❌'}`,
+            data.Healthy ? 'success' : 'error'
+          );
+
+          cancelEdit();
+          fetchServices();
+        } catch (e) {
+          toast('Error: ' + e.message, 'error');
+        } finally {
+          setLoading('btn-submit', false, editMode ? 'Save Changes' : 'Check &amp; Register');
+        }
+      }
+
+      // ── Re-check single service ────────────────────────────────────────────────
+      async function recheckOne(name, url) {
+        try {
+          const res = await fetch(`${API}/services/${encodeURIComponent(name)}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ Name: name, URL: url })
+          });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          toast(`${name} — ${data.Healthy ? 'Healthy ✅' : 'Unhealthy ❌'}`, data.Healthy ? 'success' : 'error');
+          fetchServices();
+        } catch (e) {
+          toast('Re-check failed: ' + e.message, 'error');
+        }
+      }
+
+      // ── Edit mode ──────────────────────────────────────────────────────────────
+      function openEdit(name, url) {
+        editMode = true;
+        document.getElementById('edit-original-name').value = name;
+        document.getElementById('svc-name').value = name;
+        document.getElementById('svc-url').value  = url;
+        document.getElementById('form-title').textContent = '✎ Edit Service';
+        document.getElementById('btn-submit').textContent = 'Save Changes';
+        document.getElementById('btn-cancel-edit').style.display = 'block';
+        document.getElementById('form-response').classList.remove('visible');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function cancelEdit() {
+        editMode = false;
+        document.getElementById('edit-original-name').value = '';
+        document.getElementById('svc-name').value = '';
+        document.getElementById('svc-url').value  = '';
+        document.getElementById('form-title').textContent = '+ Register Service';
+        document.getElementById('btn-submit').innerHTML = 'Check &amp; Register';
+        document.getElementById('btn-cancel-edit').style.display = 'none';
+        document.getElementById('form-response').classList.remove('visible');
+      }
+
+      // ── Delete modal ───────────────────────────────────────────────────────────
+      function openDeleteModal(name) {
+        deleteTarget = name;
+        document.getElementById('delete-modal-name').textContent = name;
+        document.getElementById('delete-modal').classList.add('open');
+      }
+
+      function closeDeleteModal() {
+        deleteTarget = null;
+        document.getElementById('delete-modal').classList.remove('open');
+      }
+
+      async function confirmDelete() {
+        if (!deleteTarget) return;
+        const name = deleteTarget;
+        closeDeleteModal();
+
+        try {
+          const res = await fetch(`${API}/services/${encodeURIComponent(name)}`, { method: 'DELETE' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          toast(`${name} deleted`, 'info');
+          fetchServices();
+        } catch (e) {
+          toast('Delete failed: ' + e.message, 'error');
+        }
+      }
+
+      // ── Run all ────────────────────────────────────────────────────────────────
+      async function runAll() {
+        ['btn-runall','btn-runall2'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.disabled = true; el.textContent = 'Running...'; }
+        });
+        try {
+          const res = await fetch(`${API}/runall`, { method: 'POST' });
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          renderServices(data);
+          toast('All health checks completed', 'success');
+        } catch (e) {
+          toast('Run all failed: ' + e.message, 'error');
+        } finally {
+          const e1 = document.getElementById('btn-runall');
+          const e2 = document.getElementById('btn-runall2');
+          if (e1) { e1.disabled = false; e1.innerHTML = '▶ &nbsp;Re-run All Health Checks'; }
+          if (e2) { e2.disabled = false; e2.textContent = '▶ Run All Checks'; }
+        }
+      }
+
+      // ── Close modal on overlay click ───────────────────────────────────────────
+      document.getElementById('delete-modal').addEventListener('click', function(e) {
+        if (e.target === this) closeDeleteModal();
+      });
+
+      // ── Enter key ──────────────────────────────────────────────────────────────
+      document.getElementById('svc-url').addEventListener('keydown', e => {
+        if (e.key === 'Enter') submitForm();
+      });
+
+      // ── Init ───────────────────────────────────────────────────────────────────
+      fetchServices();
+    </script>
+    </body>
+    </html>
